@@ -28,11 +28,11 @@ const std = @import("std");
 pub fn main() void {
     var foo: u8 = 5;
     var bar: u8 = 10;
-
+    
     // Please define pointer "p" so that it can point to EITHER foo or
     // bar AND change the value it points to!
-    ??? p: ??? = undefined;
-
+    var p: *u8 = undefined;
+    
     p = &foo;
     p.* += 1;
     p = &bar;

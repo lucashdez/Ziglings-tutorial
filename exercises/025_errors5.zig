@@ -18,7 +18,7 @@ pub fn main() void {
     const a: u32 = addFive(44) catch 0;
     const b: u32 = addFive(14) catch 0;
     const c: u32 = addFive(4) catch 0;
-
+    
     std.debug.print("a={}, b={}, c={}\n", .{ a, b, c });
 }
 
@@ -26,8 +26,8 @@ fn addFive(n: u32) MyNumberError!u32 {
     // This function needs to return any error which might come back from detect().
     // Please use a "try" statement rather than a "catch".
     //
-    const x = detect(n);
-
+    const x = try detect(n);
+    
     return x + 5;
 }
 

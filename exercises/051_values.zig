@@ -60,24 +60,24 @@ var global_wizard = Character{};
 // a stack entry (called a "frame").
 
 pub fn main() void {
-
+    
     // Here, the "glorp" character will be allocated on the stack
     // because each instance of glorp is mutable and therefore unique
     // to the invocation of this function.
-
+    
     var glorp = Character{
         .gold = 30,
     };
-
+    
     // The "reward_xp" value is interesting. It's an immutable
     // value, so even though it is local, it can be put in global
     // data and shared between all invocations. But being such a
     // small value, it may also simply be inlined as a literal
     // value in your instruction code where it is used.  It's up
     // to the compiler.
-
+    
     const reward_xp: u32 = 200;
-
+    
     // Now let's circle back around to that "std" struct we imported
     // at the top. Since it's just a regular Zig value once it's
     // imported, we can also assign new names for its fields and
@@ -86,9 +86,9 @@ pub fn main() void {
     //
     // Let's assign the std.debug.print function to a const named
     // "print" so that we can use this new name later!
-
-    const print = ???;
-
+    
+    const print = std.debug.print;
+    
     // Now let's look at assigning and pointing to values in Zig.
     //
     // We'll try three different ways of making a new name to access
@@ -102,11 +102,11 @@ pub fn main() void {
     // You don't need to fix this. But notice what gets printed in
     // your program's output for this one compared to the other two
     // assignments below!
-
+    
     var glorp_access1: Character = glorp;
     glorp_access1.gold = 111;
     print("1:{}!. ", .{glorp.gold == glorp_access1.gold});
-
+    
     // NOTE:
     //
     //     If we tried to do this with a const Character instead of a
@@ -118,21 +118,21 @@ pub fn main() void {
     // dereference with struct fields, so accessing the "gold" field
     // from glorp_access2 looks just like accessing it from glorp
     // itself.
-
+    
     var glorp_access2: *Character = &glorp;
     glorp_access2.gold = 222;
     print("2:{}!. ", .{glorp.gold == glorp_access2.gold});
-
+    
     // "glorp_access3" is interesting. It's also a pointer, but it's a
     // const. Won't that disallow changing the gold value? No! As you
     // may recall from our earlier pointer experiments, a constant
     // pointer can't change what it's POINTING AT, but the value at
     // the address it points to is still mutable! So we CAN change it.
-
+    
     const glorp_access3: *Character = &glorp;
     glorp_access3.gold = 333;
     print("3:{}!. ", .{glorp.gold == glorp_access3.gold});
-
+    
     // NOTE:
     //
     //     If we tried to do this with a *const Character pointer,
@@ -161,15 +161,15 @@ pub fn main() void {
     // experience points.
     //
     print("XP before:{}, ", .{glorp.experience});
-
+    
     // Fix 1 of 2 goes here:
-    levelUp(glorp, reward_xp);
-
+    levelUp(glorp_access2, reward_xp);
+    
     print("after:{}.\n", .{glorp.experience});
 }
 
 // Fix 2 of 2 goes here:
-fn levelUp(character_access: Character, xp: u32) void {
+fn levelUp(character_access: *Character, xp: u32) void {
     character_access.experience += xp;
 }
 

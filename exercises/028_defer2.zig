@@ -6,9 +6,9 @@ const std = @import("std");
 
 pub fn main() void {
     const animals = [_]u8{ 'g', 'c', 'd', 'd', 'g', 'z' };
-
+    
     for (animals) |a| printAnimal(a);
-
+    
     std.debug.print("done.\n", .{});
 }
 
@@ -17,9 +17,9 @@ pub fn main() void {
 // even though this function can return in four different places!
 fn printAnimal(animal: u8) void {
     std.debug.print("(", .{});
-
-    std.debug.print(") ", .{}); // <---- how?!
-
+    
+    defer std.debug.print(") ", .{}); // <---- how?!
+    
     if (animal == 'g') {
         std.debug.print("Goat", .{});
         return;
@@ -32,6 +32,6 @@ fn printAnimal(animal: u8) void {
         std.debug.print("Dog", .{});
         return;
     }
-
+    
     std.debug.print("Unknown", .{});
 }
