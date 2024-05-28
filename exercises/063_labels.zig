@@ -101,16 +101,16 @@ pub fn main() void {
     // tiny example, but it would be downright criminal in a real
     // application!
     const wanted_ingredients = [_]u8{ 0, 3 }; // Chili, Cheese
-
+    
     // Look at each Food on the menu...
-    const meal = food_loop: for (menu) |food| {
-
+    const meal: Food = food_loop: for (menu) |food| {
+        
         // Now look at each required ingredient for the Food...
         for (food.requires, 0..) |required, required_ingredient| {
-
+            
             // This ingredient isn't required, so skip it.
             if (!required) continue;
-
+            
             // See if the customer wanted this ingredient.
             // (Remember that want_it will be the index number of
             // the ingredient based on its position in the
@@ -118,21 +118,21 @@ pub fn main() void {
             const found = for (wanted_ingredients) |want_it| {
                 if (required_ingredient == want_it) break true;
             } else false;
-
+            
             // We did not find this required ingredient, so we
             // can't make this Food. Continue the outer loop.
             if (!found) continue :food_loop;
         }
-
+        
         // If we get this far, the required ingredients were all
         // wanted for this Food.
         //
         // Please return this Food from the loop.
-        break;
-    };
+        break food;
+    } else menu[0];
     // ^ Oops! We forgot to return Mac & Cheese as the default
     // Food when the requested ingredients aren't found.
-
+    
     print("Enjoy your {s}!\n", .{meal.name});
 }
 

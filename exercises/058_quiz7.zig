@@ -184,7 +184,7 @@ const f_paths = [_]Path{
 const TripItem = union(enum) {
     place: *const Place,
     path: *const Path,
-
+    
     // This is a little helper function to print the two different
     // types of item correctly.
     fn printMe(self: TripItem) void {
@@ -192,8 +192,8 @@ const TripItem = union(enum) {
             // Oops! The hermit forgot how to capture the union values
             // in a switch statement. Please capture both values as
             // 'p' so the print statements work!
-            .place => print("{s}", .{p.name}),
-            .path => print("--{}->", .{p.dist}),
+            .place => |p| print("{s}", .{p.name}),
+            .path => |p| print("--{}->", .{p.dist}),
         }
     }
 };
@@ -229,19 +229,19 @@ const HermitsNotebook = struct {
     // array without having to list them one by one. Here we use it to
     // initialize an array with null values.
     entries: [place_count]?NotebookEntry = .{null} ** place_count,
-
+    
     // The next entry keeps track of where we are in our "todo" list.
     next_entry: u8 = 0,
-
+    
     // Mark the start of empty space in the notebook.
     end_of_entries: u8 = 0,
-
+    
     // We'll often want to find an entry by Place. If one is not
     // found, we return null.
     fn getEntry(self: *HermitsNotebook, place: *const Place) ?*NotebookEntry {
         for (&self.entries, 0..) |*entry, i| {
             if (i >= self.end_of_entries) break;
-
+            
             // Here's where the hermit got stuck. We need to return
             // an optional pointer to a NotebookEntry.
             //
@@ -255,12 +255,12 @@ const HermitsNotebook = struct {
             // dereference and optional value "unwrapping" look
             // together. Remember that you return the address with the
             // "&" operator.
-            if (place == entry.*.?.place) return entry;
+            if (place == entry.*.?.place) return &entry.*.?;
             // Try to make your answer this long:__________;
         }
         return null;
     }
-
+    
     // The checkNote() method is the beating heart of the magical
     // notebook. Given a new note in the form of a NotebookEntry
     // struct, we check to see if we already have an entry for the
@@ -274,7 +274,7 @@ const HermitsNotebook = struct {
     // overwrite the old entry with the new one.
     fn checkNote(self: *HermitsNotebook, note: NotebookEntry) void {
         const existing_entry = self.getEntry(note.place);
-
+        
         if (existing_entry == null) {
             self.entries[self.end_of_entries] = note;
             self.end_of_entries += 1;
@@ -282,18 +282,18 @@ const HermitsNotebook = struct {
             existing_entry.?.* = note;
         }
     }
-
+    
     // The next two methods allow us to use the notebook as a "todo"
     // list.
     fn hasNextEntry(self: *HermitsNotebook) bool {
         return self.next_entry < self.end_of_entries;
     }
-
+    
     fn getNextEntry(self: *HermitsNotebook) *const NotebookEntry {
         defer self.next_entry += 1; // Increment after getting entry
         return &self.entries[self.next_entry].?;
     }
-
+    
     // After we've completed our search of the map, we'll have
     // computed the shortest Path to every Place. To collect the
     // complete trip from the start to the destination, we need to
@@ -309,10 +309,10 @@ const HermitsNotebook = struct {
     //
     // Looks like the hermit forgot something in the return value of
     // this function. What could that be?
-    fn getTripTo(self: *HermitsNotebook, trip: []?TripItem, dest: *Place) void {
+    fn getTripTo(self: *HermitsNotebook, trip: []?TripItem, dest: *Place) TripError!void {
         // We start at the destination entry.
         const destination_entry = self.getEntry(dest);
-
+        
         // This function needs to return an error if the requested
         // destination was never reached. (This can't actually happen
         // in our map since every Place is reachable by every other
@@ -320,24 +320,24 @@ const HermitsNotebook = struct {
         if (destination_entry == null) {
             return TripError.Unreachable;
         }
-
+        
         // Variables hold the entry we're currently examining and an
         // index to keep track of where we're appending trip items.
         var current_entry = destination_entry.?;
         var i: u8 = 0;
-
+        
         // At the end of each looping, a continue expression increments
         // our index. Can you see why we need to increment by two?
         while (true) : (i += 2) {
             trip[i] = TripItem{ .place = current_entry.place };
-
+            
             // An entry "coming from" nowhere means we've reached the
             // start, so we're done.
             if (current_entry.coming_from == null) break;
-
+            
             // Otherwise, entries have a path.
             trip[i + 1] = TripItem{ .path = current_entry.via_path.? };
-
+            
             // Now we follow the entry we're "coming from".  If we
             // aren't able to find the entry we're "coming from" by
             // Place, something has gone horribly wrong with our
@@ -357,7 +357,7 @@ pub fn main() void {
     // map!
     const start = &a; // Archer's Point
     const destination = &f; // Fox Pond
-
+    
     // Store each Path array as a slice in each Place. As mentioned
     // above, we needed to delay making these references to avoid
     // creating a dependency loop when the compiler is trying to
@@ -368,7 +368,7 @@ pub fn main() void {
     d.paths = d_paths[0..];
     e.paths = e_paths[0..];
     f.paths = f_paths[0..];
-
+    
     // Now we create an instance of the notebook and add the first
     // "start" entry. Note the null values. Read the comments for the
     // checkNote() method above to see how this entry gets added to
@@ -381,13 +381,13 @@ pub fn main() void {
         .dist_to_reach = 0,
     };
     notebook.checkNote(working_note);
-
+    
     // Get the next entry from the notebook (the first being the
     // "start" entry we just added) until we run out, at which point
     // we'll have checked every reachable Place.
     while (notebook.hasNextEntry()) {
         const place_entry = notebook.getNextEntry();
-
+        
         // For every Path that leads FROM the current Place, create a
         // new note (in the form of a NotebookEntry) with the
         // destination Place and the total distance from the start to
@@ -403,19 +403,19 @@ pub fn main() void {
             notebook.checkNote(working_note);
         }
     }
-
+    
     // Once the loop above is complete, we've calculated the shortest
     // path to every reachable Place! What we need to do now is set
     // aside memory for the trip and have the hermit's notebook fill
     // in the trip from the destination back to the path. Note that
     // this is the first time we've actually used the destination!
     var trip = [_]?TripItem{null} ** (place_count * 2);
-
+    
     notebook.getTripTo(trip[0..], destination) catch |err| {
         print("Oh no! {}\n", .{err});
         return;
     };
-
+    
     // Print the trip with a little helper function below.
     printTrip(trip[0..]);
 }
@@ -430,13 +430,13 @@ fn printTrip(trip: []?TripItem) void {
     // builtin function just like @import().  We'll learn about
     // these properly in a later exercise.
     var i: u8 = @intCast(trip.len);
-
+    
     while (i > 0) {
         i -= 1;
         if (trip[i] == null) continue;
         trip[i].?.printMe();
     }
-
+    
     print("\n", .{});
 }
 

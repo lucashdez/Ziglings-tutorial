@@ -15,6 +15,11 @@
 //
 const std = @import("std");
 
+const InsectStat = enum {
+    flowers_visited,
+    still_alive,
+};
+
 const Insect = union(InsectStat) {
     flowers_visited: u16,
     still_alive: bool,
@@ -23,12 +28,12 @@ const Insect = union(InsectStat) {
 pub fn main() void {
     const ant = Insect{ .still_alive = true };
     const bee = Insect{ .flowers_visited = 17 };
-
+    
     std.debug.print("Insect report! ", .{});
-
+    
     printInsect(ant);
     printInsect(bee);
-
+    
     std.debug.print("\n", .{});
 }
 
